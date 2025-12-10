@@ -1,0 +1,103 @@
+{
+  "name": "Ecoma Common Infras",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:24-bookworm",
+  "runArgs": [
+    "--name",
+    "ecoma-common-infras",
+    "--ulimit",
+    "nofile=256536:256536",
+    "--privileged",
+    "--volume",
+    "/sys/fs/bpf:/sys/fs/bpf"
+  ],
+  "remoteEnv": {
+    "PATH": "${containerEnv:PATH}:/workspaces/common-infras/bin"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": "true",
+      "installOhMyZsh": "true",
+      "configureZshAsDefaultShell": true,
+      "installOhMyZshConfig": true
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "moby": true
+    },
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/dhoeric/features/hadolint:1": {},
+    "./features/omz": {
+      "preInstalledPlugins": [
+        "git",
+        "git-auto-fetch"
+      ],
+      "customPlugins": [
+        "zsh-syntax-highlighting:https://github.com/zsh-users/zsh-syntax-highlighting.git",
+        "you-should-use:https://github.com/MichaelAquilina/zsh-you-should-use.git",
+        "zsh-autosuggestions:https://github.com/zsh-users/zsh-autosuggestions/archive/refs/tags/v0.7.1.zip"
+      ],
+      "deleteInactive": true
+    },
+    "./features/powerlevel10k": {
+      "deletePreinstalledThemes": true
+    }
+  },
+  "appPort": [
+    80,
+    443
+  ],
+  "postCreateCommand": "sh .devcontainer/post-create.sh",
+  "customizations": {
+    "vscode": {
+      "mcp": {
+        "servers": {
+          "filesystem": {
+            "command": "npx",
+            "args": [
+              "-y",
+              "@modelcontextprotocol/server-filesystem",
+              "/workspaces/common-infras"
+            ]
+          },
+          "sequential-thinking": {
+            "command": "npx",
+            "args": [
+              "-y",
+              "@modelcontextprotocol/server-sequential-thinking"
+            ]
+          },
+          "git": {
+            "type": "stdio",
+            "command": "npx",
+            "args": [
+              "@cyanheads/git-mcp-server@latest"
+            ],
+            "env": {
+              "MCP_TRANSPORT_TYPE": "stdio",
+              "MCP_LOG_LEVEL": "info",
+              "LOGS_DIR": "/var/log/git-mcp-server/"
+            }
+          }
+        }
+      },
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "EditorConfig.EditorConfig",
+        "ms-vscode-remote.remote-containers",
+        "exiasr.hadolint",
+        "jetmartin.bats"
+      ],
+      "settings": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "remote.autoForwardPorts": false,
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+          "zsh": {
+            "path": "/bin/zsh"
+          }
+        }
+      }
+    }
+  }
+}

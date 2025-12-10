@@ -1,0 +1,34 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: cilium
+
+resources:
+  - resources/http.gateway.yaml
+
+helmCharts:
+  - name: cilium
+    repo: https://helm.cilium.io/
+    releaseName: cilium
+    version: 1.18.4
+    valuesFile: cilium-chart.values.yaml
+
+patches:
+  - target:
+      kind: ClusterRole
+      name: cilium-operator
+    patch: |-
+      - op: add
+        path: /rules/-
+        value:
+          apiGroups:
+            - discovery.k8s.io
+          resources:
+            - endpointslices
+          verbs:
+            - get
+            - list
+            - watch
+            - create
+            - update
+            - patch
+            - delete

@@ -1,0 +1,35 @@
+#!/bin/sh
+#
+# Husky Commit-Msg Hook - Custom Shell Script
+#
+# It receives the path to the commit message file as the first argument ($1).
+
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat $COMMIT_MSG_FILE)
+REGEX='^(feat|fix|docs|refactor|perf|test|build|ci|chore|revert)(\([a-zA-Z0-9_\-]+\))?: [A-Z].{5,70}$'
+
+# 1. Check basic format using Regular Expression (Regex)
+if ! echo "$COMMIT_MSG" | grep -Eq "$REGEX"; then
+    echo "🚨 ERROR: Commit message does not comply with the basic Conventional Commit format."
+    echo ""
+    echo "Required rules:"
+    echo "1. MUST start with <type>(<scope>): <subject> (e.g.: feat(auth): Add login endpoint)"
+    echo "2. <type> must be one of: feat, fix, docs, refactor, perf, test, build, ci, chore, revert"
+    echo "3. <scope> is optional, but if present must be enclosed in parentheses ()."
+    echo "4. <subject> MUST start with an uppercase letter (A-Z) and be between 5 and 70 characters long."
+    echo ""
+    echo "Current commit message:"
+    echo "-> $COMMIT_MSG"
+    echo ""
+    exit 1
+fi
+
+# 2. Check for trailing whitespace at the end of the subject
+if echo "$COMMIT_MSG" | head -n 1 | grep -E '[[:space:]]$'; then
+    echo "🚨 ERROR: Commit message MUST NOT contain trailing whitespace at the end of the subject."
+    echo ""
+    exit 1
+fi
+
+# If everything is OK, exit with code 0 (success)
+exit 0

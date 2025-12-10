@@ -1,0 +1,70 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: argocd
+
+resources:
+  - ../base
+
+patches:
+  # Change Domain For Local Development
+  - target:
+      kind: HTTPRoute
+      name: argocd
+    patch: |-
+      - op: add
+        path: /spec/hostnames
+        value:
+          - "argocd.ecoma.com"
+  - target:
+      kind: Application
+      name: argocd
+    # Use Local Repo for Local Development
+    patch: |-
+      - op: add
+        path: /spec/source
+        value: 
+          repoURL: https://github.com/ecoma-io/common-infras.git
+          path: src/argocd/prod
+          targetRevision: main
+  # Enable Kustomize Helm Support
+  # REF https://argo-cd.readthedocs.io/en/stable/operator-manual/argocd-cm-yaml/
+  - target:
+      kind: ConfigMap
+      name: argocd-cm
+    # Disable Anonymous User Access in Production
+    patch: |-
+      - op: add
+        path: /data/users.anonymous.enabled
+        value: "false"
+  # REF https://argo-cd.readthedocs.io/en/latest/operator-manual/argocd-cmd-params-cm-yaml/
+  - target:
+      kind: ConfigMap
+      name: argocd-cmd-params-cm
+    # Set warning log level to reduce noise in production
+    patch: |-
+      - op: add
+        path: /data
+        value:      
+          "server.log.level": "warn"
+          "reposerver.log.level": "warn"
+          "controller.log.level": "warn"
+          "dexserver.log.level": "warn"
+          "applicationsetcontroller.log.level": "warn"
+          "notificationscontroller.log.level" : "warn"
+  - target:
+      kind: ApplicationSet
+      name: cluster-core
+    # Use Local Repo for Local Development
+    patch: |-
+      - op: add
+        path: /spec/generators/0/git
+        value: 
+          repoURL: https://github.com/ecoma-io/common-infras.git
+          revision: main
+          directories:
+            - path: src/core/*/prod
+      - op: add
+        path: /spec/template/spec/source
+        value:
+          repoURL: https://github.com/ecoma-io/common-infras.git
+          targetRevision: main

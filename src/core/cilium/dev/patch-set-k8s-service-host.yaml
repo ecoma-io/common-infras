@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cilium-operator
+  namespace: cilium
+spec:
+  template:
+    spec:
+      containers:
+        - name: cilium-operator
+          env:
+            - name: KUBERNETES_SERVICE_HOST
+              value: "127.0.0.1"
+            - name: KUBERNETES_SERVICE_PORT
+              value: "6443"

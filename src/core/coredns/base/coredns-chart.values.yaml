@@ -1,0 +1,15 @@
+# REF: https://github.com/coredns/helm/blob/master/charts/coredns/values.yaml
+service:
+  # Fixed ClusterIP for CoreDNS Service base on k3s CIDR
+  clusterIP: 10.43.0.10
+replicas: 1
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+rollingUpdate:
+  maxUnavailable: 0
+  maxSurge: 25%
