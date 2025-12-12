@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: cilium
 
 resources:
+  - https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.1/standard-install.yaml
   - resources/http.gateway.yaml
 
 helmCharts:
