@@ -31,6 +31,17 @@ install_tools(){
   npm i -g husky
   husky
   bash scripts/install-tools.sh dev
+
+  KUBESEAL_VERSION=$(curl -s https://api.github.com/repos/bitnami-labs/sealed-secrets/tags | jq -r '.[0].name' | cut -c 2-)
+  KUBESEAL_TGZ="/tmp/kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz"
+  KUBESEAL_URL="https://github.com/bitnami-labs/sealed-secrets/releases/download/v${KUBESEAL_VERSION}/kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz"
+
+  # Download to /tmp, follow redirects, and wtmprite to the specified file
+  curl -L -o "$KUBESEAL_TGZ" "$KUBESEAL_URL"
+
+  # Extract the kubeseal binary from the archive into /tmp, install and cleanup
+  (cd /tmp && tar -xvzf "$KUBESEAL_TGZ" kubeseal && sudo install -m 755 kubeseal /usr/local/bin/kubeseal)
+  rm -f "$KUBESEAL_TGZ" /tmp/kubeseal || true
 }
 
 configure_git_editor

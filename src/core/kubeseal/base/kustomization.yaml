@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: kubeseal
+
+resources:
+  - https://github.com/bitnami-labs/sealed-secrets/raw/refs/tags/v0.33.1/helm/sealed-secrets/crds/bitnami.com_sealedsecrets.yaml
+
+helmCharts:
+  - name: sealed-secrets
+    repo: https://bitnami-labs.github.io/sealed-secrets
+    releaseName: kubeseal
+    version: 2.17.9
+    valuesFile: kubeseal-chart.values.yaml
