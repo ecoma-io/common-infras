@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: cf-tunnel
+# In development we just deploy the Cloudflare Tunnel for testing purposes.
+# The cilium api gateway with host networking handles the direct routing.
+resources:
+  - ../base
+  - resources/secret.yaml
+
+patches:
+  - target:
+      kind: Deployment
+      name: cf-tunnel
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: TUNNEL_LOGLEVEL
+          value: "info"
