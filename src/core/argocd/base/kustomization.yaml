@@ -93,7 +93,7 @@ patches:
             cpu: "100m"
             memory: "256Mi"
           limits:
-            cpu: "1000m"
+            cpu: "500m"
             memory: "512Mi"
   - target:
       kind: Deployment
@@ -113,7 +113,7 @@ patches:
             cpu: "100m"
             memory: "128Mi"
           limits:
-            cpu: "1000m"
+            cpu: "500m"
             memory: "256Mi"
   - target:
       kind: StatefulSet
@@ -126,7 +126,20 @@ patches:
             cpu: "100m"
             memory: "256Mi"
           limits:
-            cpu: "1000m"
+            cpu: "500m"
+            memory: "512Mi"
+  - target:
+      kind: Deployment
+      name: argocd-applicationset-controller
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
             memory: "512Mi"
   - target:
       kind: StatefulSet
@@ -139,8 +152,34 @@ patches:
             cpu: "100m"
             memory: "256Mi"
           limits:
-            cpu: "1000m"
+            cpu: "500m"
             memory: "512Mi"
+  - target:
+      kind: Deployment
+      name: argocd-notifications-controller
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "200m"
+            memory: "196Mi"
+  - target:
+      kind: Deployment
+      name: argocd-redis
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "200m"
+            memory: "196Mi"
   - target:
       kind: Deployment
       name: argocd-dex-server
