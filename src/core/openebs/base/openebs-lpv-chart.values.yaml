@@ -6,7 +6,13 @@ localpv:
   updateStrategy:
     type: RollingUpdate
     maxSurge: 25%
-
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
 hostpathClass:
   name: hostpath
   isDefaultClass: true
