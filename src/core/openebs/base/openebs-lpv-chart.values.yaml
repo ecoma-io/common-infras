@@ -1,0 +1,12 @@
+# REF: https://github.com/openebs/dynamic-localpv-provisioner/blob/v4.4.0/deploy/helm/charts/values.yaml
+
+fullnameOverride: openebs-lpv
+
+localpv:
+  updateStrategy:
+    type: RollingUpdate
+    maxSurge: 25%
+
+hostpathClass:
+  name: hostpath
+  isDefaultClass: true
