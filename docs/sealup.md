@@ -12,11 +12,11 @@
 
   - Seal a file (uses `ENV` positional arg):
     ```bash
-    ./bin/sealup dev path/to/secret.yaml > sealed-secret.yaml
+    sealup dev path/to/secret.yaml > sealed-secret.yaml
     ```
   - Seal from stdin:
     ```bash
-    cat secret.yaml | ./bin/sealup prod - > sealed-secret.yaml
+    cat secret.yaml | sealup prod - > sealed-secret.yaml
     ```
 
 - **Options:**
@@ -37,7 +37,7 @@
   1. Edit `src/core/argocd/dev/resources/argocd-github-secret.yaml` and fill `clientID` and `clientSecret`.
   2. Seal it:
      ```bash
-     ./bin/sealup dev src/core/argocd/dev/resources/argocd-github-secret.yaml > src/core/argocd/dev/resources/sealed-argocd-github-secret.yaml
+     sealup dev src/core/argocd/dev/resources/argocd-github-secret.yaml > src/core/argocd/dev/resources/sealed-argocd-github-secret.yaml
      ```
   3. Replace / commit the sealed file into the overlay (or include as additional resource in kustomization).
 
