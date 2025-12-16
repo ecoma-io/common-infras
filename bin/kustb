@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# kustb - A wrapper script for kustomize build with Helm support
+#
+# This script provides a convenient wrapper around the kustomize build command
+# with pre-configured flags for Helm integration and unrestricted file loading.
+#
+# Features:
+#   - Enables Helm chart processing within kustomize
+#   - Removes load restrictions for flexibility in resource loading
+#
+# Usage:
+#   kustb [kustomize-build-options] [directory]
+#
+# Example:
+#   kustb ./overlays/production
+#   kustb --output manifest.yaml ./base
+#
+# Flags enabled by default:
+#   --enable-helm            : Allow kustomize to process Helm charts
+#   --load-restrictor LoadRestrictionsNone : Disable file loading restrictions
+#
+# Note: All additional arguments are passed directly to kustomize build
+set -euo pipefail
+
+# Detect kustomize binary (allow override via env var)
+KUSTOMIZE_BIN="${KUSTOMIZE_BIN:-$(command -v kustomize || true)}"
+if [[ -z "$KUSTOMIZE_BIN" ]]; then
+	echo "ERROR: kustomize not found in PATH; install kustomize or set KUSTOMIZE_BIN." >&2
+	exit 2
+fi
+
+# If user asked for help/version, passthrough to kustomize directly
+case "${1:-}" in
+	-h|--help|--version)
+		exec "$KUSTOMIZE_BIN" "$@"
+		;;
+esac
+
+# If user explicitly provided 'build' as first arg, forward directly
+if [[ "${1:-}" == "build" ]]; then
+	exec "$KUSTOMIZE_BIN" "$@"
+fi
+
+# Default flags for kustomize build
+DEFAULT_FLAGS=(build --enable-helm --load-restrictor LoadRestrictionsNone)
+
+if [[ "${KUSTB_DEBUG:-0}" != "0" ]]; then
+	echo "Running: $KUSTOMIZE_BIN ${DEFAULT_FLAGS[*]} $*" >&2
+fi
+
+exec "$KUSTOMIZE_BIN" "${DEFAULT_FLAGS[@]}" "$@"
