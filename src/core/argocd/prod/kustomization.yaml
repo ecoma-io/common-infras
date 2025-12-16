@@ -14,7 +14,7 @@ patches:
       - op: add
         path: /spec/hostnames
         value:
-          - "argocd.ecoma.com"
+          - "argocd.ecoma.io"
   - target:
       kind: Application
       name: argocd
