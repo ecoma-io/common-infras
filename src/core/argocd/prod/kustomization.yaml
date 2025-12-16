@@ -56,15 +56,16 @@ patches:
       name: cluster-core
     # Use Local Repo for Local Development
     patch: |-
-      - op: add
+      - op: replace
         path: /spec/generators/0/git
         value: 
           repoURL: https://github.com/ecoma-io/common-infras.git
           revision: main
           directories:
             - path: src/core/*/prod
-      - op: add
-        path: /spec/template/spec/source
-        value:
-          repoURL: https://github.com/ecoma-io/common-infras.git
-          targetRevision: main
+      - op: replace
+        path: /spec/template/spec/source/repoURL
+        value: https://github.com/ecoma-io/common-infras.git
+      - op: replace
+        path: /spec/template/spec/source/targetRevision
+        value: main
