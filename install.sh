@@ -98,7 +98,6 @@ Are you sure you want to proceed? (yes/no): '
 
       # apply the public cert to the cluster
       kubectl -n kubeseal create secret generic sealed-secrets-key --from-file=tls.key="$KUBESEAL_KEY_PATH" --from-file=tls.crt="$PUBLIC_KEY_PATH" --dry-run=client -o yaml | kubectl apply -f -
-      exit 0
     fi
   else
     printf '❌ Private key does not match certificate %s (cert fp: %s, priv fp: %s)\n' "$PUBLIC_KEY_PATH" "$CERT_FP" "$PRIV_FP"
