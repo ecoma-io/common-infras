@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+# ukubeseal - shell helper to seal Kubernetes Secrets with kubeseal using env-specific certs
+#
+# Behavior:
+# - Accepts one or more YAML files (or reads from stdin if none provided).
+# - Splits multi-doc YAML by '---'. For each document that is a `Secret`, selects
+#   `dev.cert` when the Secret's namespace is `dev`, otherwise uses `prod.cert`.
+# - Calls `kubeseal --cert <cert> --format yaml` on each Secret and prints combined sealed manifests.
+#
+# Usage:
+#   bin/ukubeseal secret.yaml > sealed.yaml
+#   cat secret.yaml | bin/ukubeseal > sealed.yaml
+#
+# Notes:
+# - Requires `kubeseal` in PATH and `dev.cert`/`prod.cert` available (defaults to cwd).
+
+set -euo pipefail
+
+# repo root: one level above the script's parent (script at <repo>/bin/ukubeseal)
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# required: env (dev|prod) as positional argument
+env_arg=''
+files=()
+
+usage() {
+  cat <<EOF >&2
+Usage: $(basename "$0") ENV [--cert-dir DIR] [files...]
+
+Arguments:
+  ENV              required, either 'dev' or 'prod' to select cert at repo root (ENV.cert)
+
+Options:
+  --cert-dir DIR   optional, override directory for certs (default: repo root)
+  -                read from stdin
+EOF
+  exit 2
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --cert-dir)
+      REPO_ROOT="$2"; shift 2 ;;
+    --cert-dir=*)
+      REPO_ROOT="${1#*=}"; shift ;;
+    -)
+      files+=( '-') ; shift ;;
+    --)
+      shift ; while [[ $# -gt 0 ]]; do files+=("$1"); shift; done ;;
+    -* )
+      echo "Unknown option: $1" >&2; usage ;;
+    *)
+      if [[ -z "$env_arg" ]]; then
+        env_arg="$1"
+      else
+        files+=("$1")
+      fi
+      shift ;;
+  esac
+done
+
+if [[ -z "$env_arg" ]]; then
+  echo "ERROR: ENV positional argument is required (dev|prod)" >&2
+  usage
+fi
+
+if [[ "$env_arg" != "dev" && "$env_arg" != "prod" ]]; then
+  echo "ERROR: ENV must be 'dev' or 'prod'" >&2
+  usage
+fi
+
+if [[ ${#files[@]} -eq 0 ]]; then
+  files+=( '-')
+fi
+
+tmpdir=$(mktemp -d)
+trap 'rm -rf "${tmpdir}"' EXIT
+
+# If stdin is requested ("-"), capture it once into a temp file so it can be read multiple times
+for i in "${!files[@]}"; do
+  if [[ "${files[$i]}" == '-' ]]; then
+    stdin_tmp="$tmpdir/stdin.yaml"
+    cat - > "$stdin_tmp"
+    files[$i]="$stdin_tmp"
+  fi
+done
+
+first_output=true
+
+cert_file="$REPO_ROOT/${env_arg}.cert"
+if [[ ! -f "$cert_file" ]]; then
+  echo "ERROR: cert file not found at repo root: $cert_file" >&2
+  exit 6
+fi
+
+for f in "${files[@]}"; do
+  if [[ ! -f "$f" ]]; then
+    echo "ERROR: input file not found: $f" >&2
+    exit 3
+  fi
+
+  # split documents into $tmpdir/doc-000.yaml ...
+  awk -v outdir="$tmpdir" '
+    BEGIN{doc=0; fname=sprintf("%s/doc-%03d.yaml", outdir, doc)}
+    /^[[:space:]]*---[[:space:]]*$/ { doc++; fname=sprintf("%s/doc-%03d.yaml", outdir, doc); next }
+    { print >> fname }
+  ' "$f"
+
+  for doc in "$tmpdir"/doc-*.yaml; do
+    # skip if file doesn't exist (no docs)
+    [[ -f "$doc" ]] || continue
+    # skip empty docs
+    if [[ ! -s "$doc" ]]; then
+      continue
+    fi
+
+    # extract kind (first occurrence)
+    kind=$(grep -E '^[[:space:]]*kind:[[:space:]]*' "$doc" | head -n1 | sed -E 's/^[[:space:]]*kind:[[:space:]]*//') || true
+    if [[ -z "$kind" ]]; then
+      echo "ERROR: resource has no 'kind' field in $doc" >&2
+      exit 4
+    fi
+    if [[ "$kind" != "Secret" ]]; then
+      echo "ERROR: Only resources of kind Secret can be sealed. Found: $kind in $doc" >&2
+      exit 5
+    fi
+
+
+    # extract namespace if present (empty => cluster-wide scope)
+    namespace=$(grep -E '^[[:space:]]*namespace:[[:space:]]*' "$doc" | head -n1 | sed -E 's/^[[:space:]]*namespace:[[:space:]]*//') || true
+
+    if [[ -z "$namespace" ]]; then
+      # cluster-wide sealing
+      scope_args=("--scope" "cluster-wide")
+    else
+      # namespace scoped sealing (kubeseal expects 'namespace-wide')
+      scope_args=("--scope" "namespace-wide")
+    fi
+
+    kubeseal_bin=$(command -v kubeseal || true)
+    if [[ -z "$kubeseal_bin" ]]; then
+      echo "ERROR: kubeseal not found in PATH" >&2
+      exit 7
+    fi
+
+    sealed_out=$($kubeseal_bin --cert "$cert_file" --format yaml "${scope_args[@]}" < "$doc") || { echo "ERROR: kubeseal failed for $doc" >&2; exit 8; }
+
+    if $first_output; then
+      printf '%s
+' "$sealed_out"
+      first_output=false
+    else
+      printf '\n---\n'
+      printf '%s
+' "$sealed_out"
+    fi
+
+  done
+  # clean split docs for this input
+  rm -f "$tmpdir"/doc-*.yaml
+done
+
+exit 0
