@@ -44,7 +44,8 @@ patches:
     patch: |-
       - op: add
         path: /data
-        value:      
+        value:  
+          "server.insecure": "true"   
           "server.log.level": "warn"
           "reposerver.log.level": "warn"
           "controller.log.level": "warn"
