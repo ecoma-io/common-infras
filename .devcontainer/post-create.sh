@@ -47,3 +47,4 @@ install_tools(){
 configure_git_editor
 configure_iterm2_zsh
 install_tools
+chmod +x ./bin/*
