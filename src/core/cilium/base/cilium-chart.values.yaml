@@ -5,6 +5,7 @@ k8sServiceHost: 127.0.0.1
 k8sServicePort: 6443
 gatewayAPI:
   enabled: true
+  enableProxyProtocol: false
   enableAppProtocol: true
   enableAlpn: true
 routingMode: tunnel
