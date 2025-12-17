@@ -1,0 +1,27 @@
+#!/bin/sh
+# Pre-commit Git Hook
+#
+# This hook is executed automatically before a commit is created.
+# It runs smoke tests to ensure basic functionality is working correctly
+# before allowing the commit to proceed.
+#
+# Purpose:
+#   - Validates code integrity by running smoke tests
+#   - Prevents commits if critical tests fail
+#   - Ensures code quality and basic functionality
+#
+# Requirements:
+#   - bats (Bash Automated Testing System) must be installed
+#   - tests/smoke-test.bats must exist in the project root
+#
+# Exit codes:
+#   - 0: All tests passed, commit will proceed
+#   - Non-zero: Tests failed, commit will be aborted
+#
+# Usage:
+#   This hook is automatically triggered by git commit
+#   To bypass this hook (not recommended): git commit --no-verify
+#!/bin/sh
+
+
+bats tests/smoke-test.bats --pretty --trace
