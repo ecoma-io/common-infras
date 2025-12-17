@@ -1,13 +1,13 @@
 # REF https://github.com/cilium/cilium/blob/main/install/kubernetes/cilium/values.yaml
 namespaceOverride: cilium
 kubeProxyReplacement: "true"
-k8sServiceHost: 127.0.0.1
-k8sServicePort: 6443
 gatewayAPI:
   enabled: true
   enableProxyProtocol: false
   enableAppProtocol: true
   enableAlpn: true
+  hostNetwork:
+    enabled: true
 routingMode: tunnel
 tunnelProtocol: vxlan
 policyEnforcementMode: "never"

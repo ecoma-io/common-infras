@@ -6,13 +6,6 @@ resources:
   - ../base
 
 patches:
-  - target:
-      kind: ConfigMap
-      name: cilium-config
-    patch: |-
-      - op: replace
-        path: /data/gateway-api-hostnetwork-enabled
-        value: "true"
   - path: patch-set-k8s-service-host.yaml
     target:
       kind: Deployment
