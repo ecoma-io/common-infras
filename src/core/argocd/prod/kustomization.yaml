@@ -16,17 +16,7 @@ patches:
         path: /spec/hostnames
         value:
           - "argocd.ecoma.io"
-  - target:
-      kind: Application
-      name: argocd
-    # Use Local Repo for Local Development
-    patch: |-
-      - op: add
-        path: /spec/source
-        value: 
-          repoURL: https://github.com/ecoma-io/common-infras.git
-          path: src/argocd/prod
-          targetRevision: main
+
   # Enable Kustomize Helm Support
   # REF https://argo-cd.readthedocs.io/en/stable/operator-manual/argocd-cm-yaml/
   - target:
@@ -55,8 +45,15 @@ patches:
           "notificationscontroller.log.level" : "warn"
   - target:
       kind: ApplicationSet
-      name: cluster-core
     # Use Local Repo for Local Development
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/source/targetRevision
+        value: main
+
+  - target:
+      kind: ApplicationSet
+      name: cluster-core
     patch: |-
       - op: replace
         path: /spec/generators/0/git
@@ -68,10 +65,25 @@ patches:
       - op: replace
         path: /spec/template/spec/source/repoURL
         value: https://github.com/ecoma-io/common-infras.git
+
+  - target:
+      kind: ApplicationSet
+      name: platform
+    # Use Local Repo for Local Development
+    patch: |-
+      - op: replace
+        path: /spec/generators/0/git
+        value: 
+          repoURL: https://github.com/ecoma-io/common-infras.git
+          revision: main
+          directories:
+            - path: src/platform/*/prod
+      - op: replace
+        path: /spec/template/spec/source/repoURL
+        value: https://github.com/ecoma-io/common-infras.git
       - op: replace
         path: /spec/template/spec/source/targetRevision
         value: main
-
   # Add Argo CD external URL and Dex connector for GitHub (prod)
   - target:
       kind: ConfigMap

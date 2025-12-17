@@ -16,18 +16,6 @@ patches:
         value:
           - "argocd.fbi.com"
 
-  # Use a local repo for the argocd Application (dev override)
-  - target:
-      kind: Application
-      name: argocd
-    patch: |-
-      - op: add
-        path: /spec/source
-        value: 
-          repoURL: file:///mnt/local-repo.git
-          path: src/argocd/dev
-          targetRevision: HEAD
-
   # Override reconciliation timeout for dev environment
   - target:
       kind: ConfigMap
@@ -96,11 +84,25 @@ patches:
         path: /spec/template/spec/source/repoURL
         value: file:///mnt/local-repo.git
 
-  # 3) Replace the template source targetRevision to HEAD for dev testing.
+  # ApplicationSet `platform` patches split for clarity and to reduce merge conflicts.
+  # 1) Add git generator pointing at the local repo for dev clusters.
   - target:
       kind: ApplicationSet
-      name: cluster-core
+      name: platform
+    patch: |-
+      - op: add
+        path: /spec/generators/0/git
+        value: 
+          repoURL: file:///mnt/local-repo.git
+          revision: HEAD
+          directories:
+            - path: src/platform/*/dev
+
+  # 2) Replace the template source repoURL to use the local repo.
+  - target:
+      kind: ApplicationSet
+      name: platform
     patch: |-
       - op: replace
-        path: /spec/template/spec/source/targetRevision
-        value: HEAD
+        path: /spec/template/spec/source/repoURL
+        value: file:///mnt/local-repo.git
