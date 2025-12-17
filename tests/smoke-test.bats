@@ -18,8 +18,8 @@ setup() {
   done
 }
 
-@test "Smoke test build tools app with kustomize configurations" {
-  for d in "$ROOT_DIR/src/tools"/*; do
+@test "Smoke test build platforms app with kustomize configurations" {
+  for d in "$ROOT_DIR/src/platforms"/*; do
     [ -d "$d" ] || continue
     run kustomize build --enable-helm --load-restrictor LoadRestrictionsNone "$d/base"
     assert_success
