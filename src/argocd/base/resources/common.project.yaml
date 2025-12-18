@@ -1,4 +1,30 @@
 apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: common
+spec:
+  description: Common infrastructure applications shared platform across projects in ecoma.
+  sourceRepos:
+    - "*"
+  sourceNamespaces:
+    - "*"
+  destinations:
+    - namespace: "*"
+      server: "*"
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  roles:
+    - name: project-role
+      description: The "project-role" will be applied to the `platform-devops` group.
+      groups:
+        - platform-devops
+      policies:
+        - p, proj:common:project-role, applications, *, *, allow
+  orphanedResources:
+    warn: true
+---
+apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
   name: common
@@ -12,20 +38,22 @@ spec:
         # revision: HEAD
         # repoURL: https://github.com/ecoma-io/common-infras.git
         # directories:
-        #   - path: src/core/*/prod
+        #   - path: src/*/prod
   template:
     metadata:
-      name: "{{ index .path.segments 2 }}"
+      name: "{{ index .path.segments 1 }}"
       namespace: argocd
+      labels:
+        environment: "{{ index .path.segments 1 }}"
     spec:
-      project: default
+      project: common
       source:
         repoURL: ""
         targetRevision: ""
         path: "{{ .path.path}}"
       destination:
         name: "in-cluster"
-        namespace: "{{ index .path.segments 2 }}"
+        namespace: "{{ index .path.segments 1 }}"
       syncPolicy:
         automated:
           prune: true

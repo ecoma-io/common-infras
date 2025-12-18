@@ -5,7 +5,9 @@ namespace: argocd
 resources:
   - https://raw.githubusercontent.com/argoproj/argo-cd/v3.2.1/manifests/install.yaml
   - resources/argo-cd.http-route.yaml
-  - resources/common.appsets.yaml
+  - resources/default.project.yaml
+  - resources/common.project.yaml
+
 patches:
   # REF https://argo-cd.readthedocs.io/en/stable/operator-manual/argocd-cm-yaml/
   # Enable exec plugin support in Argo CD.
@@ -200,3 +202,31 @@ patches:
           limits:
             cpu: "250m"
             memory: "256Mi"
+  # Add RBAC policy and default role via patch (append to base argocd-rbac-cm)
+  - target:
+      kind: ConfigMap
+      name: argocd-rbac-cm
+    patch: |-
+      - op: add
+        path: /data
+        value: {}
+      - op: add
+        path: /data/policy.csv
+        value: |
+          # Role definitions
+          g, ecoma-io:admin, administrators
+
+          # Admin: full control
+          p, administrators, applications, *, */*, allow
+          p, administrators, clusters, *, *, allow
+          p, administrators, repositories, *, *, allow   
+
+          # Default: read-only access
+          p, viewers, applications, get, */*, allow
+          p, viewers, clusters, *, *, deny
+          p, administrators, repositories, *, *, deny   
+
+          p, viewers, clusters, *, *, deny
+      - op: replace
+        path: /data/policy.default
+        value: viewers

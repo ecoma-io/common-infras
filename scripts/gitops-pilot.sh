@@ -14,6 +14,7 @@ sleep 3
 bash "$ROOT_DIR/scripts/verify-pod.sh" argocd  app.kubernetes.io/name=argocd-redis 600
 # rollout argocd-server and argocd-repo-server to pick up any config changes
 kubectl -n argocd rollout restart deployment argocd-repo-server
+kubectl -n argocd rollout restart deployment argocd-applicationset-controller
 bash "$ROOT_DIR/scripts/verify-pod.sh" argocd "app.kubernetes.io/name=argocd-server" 600
 bash "$ROOT_DIR/scripts/verify-pod.sh" argocd "app.kubernetes.io/name=argocd-repo-server" 600
 kubectl config set-context --current --namespace=argocd
