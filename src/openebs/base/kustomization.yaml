@@ -2,18 +2,14 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: openebs
 
+resources:
+  - resources/hot.storageclass.yaml
+  - resources/warm.storageclass.yaml
+  - resources/cold.storageclass.yaml
+
 helmCharts:
   - name: localpv-provisioner
     repo: https://openebs.github.io/dynamic-localpv-provisioner
     releaseName: openebs-lpv
     version: 4.4.0
     valuesFile: openebs-lpv-chart.values.yaml
-
-patches:
-  - target:
-      kind: StorageClass
-      name: hostpath
-    patch: |-
-      - op: add
-        path: /allowVolumeExpansion
-        value: true
