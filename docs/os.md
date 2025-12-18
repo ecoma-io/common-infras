@@ -1,23 +1,15 @@
-# Sau khi cài đặt os xong cần chạy các lệnh sau:
+# Cách chạy script để cài đặt trên server
 
-### Tối ưu cho cloudflared & Tailscale
-
-**/etc/sysctl.conf**
+## Master
 
 ```
-net.core.rmem_max = 8388608
-net.core.wmem_max = 8388608
-fs.file-max =524288
-fs.inotify.max_user_instances
-net.ipv4.ip_local_port_range = 11000 60999
-net.ipv4.ip_forward = 1
+curl -fsSL https://github.com/ecoma-io/common-infras/raw/refs/heads/main/setup.sh | ROLE=master REGION=vn-hn-1  K3S_TOKEN="<paste-your-token-here>"  TAILSCALE_AUTH_KEY="<TAILSCALE_AUTH_KEY>" sh -
 ```
 
-**/etc/security/limits.conf**
+Sau khi chạy xong nhớ vào tailscale admin console để Accept Service Node
+
+## Worker
 
 ```
-*   soft   nofile   524288
-*   hard   nofile   524288
-``
-
+curl -fsSL https://github.com/ecoma-io/common-infras/raw/refs/heads/main/setup.sh | ROLE=worker K3S_URL=https://kube-api:6443 REGION=vn-hn-1  K3S_TOKEN="<K3S_TOKEN>"  TAILSCALE_AUTH_KEY="<TAILSCALE_AUTH_KEY>" sh -
 ```

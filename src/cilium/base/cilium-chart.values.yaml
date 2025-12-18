@@ -8,6 +8,8 @@ gatewayAPI:
   enableAlpn: true
   hostNetwork:
     enabled: true
+  secretsNamespace:
+    name: cilium-secrets
 routingMode: tunnel
 tunnelProtocol: vxlan
 policyEnforcementMode: "never"
@@ -61,6 +63,8 @@ envoy:
   rollingUpdate:
     maxSurge: 25%
     maxUnavailable: 0
+  secretsNamespace:
+    name: cilium-secrets
   resources:
     requests:
       cpu: 100m
