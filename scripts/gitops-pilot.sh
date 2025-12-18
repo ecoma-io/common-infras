@@ -8,8 +8,8 @@ ENVIRONMENT=$1
 printf "🚀 Installing Argo CD...\n"
 kubectl apply -k https://github.com/argoproj/argo-cd/manifests/crds\?ref\=stable
 kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
-kubectl apply -f $ROOT_DIR/src/core/cilium/base/resources/http.gateway.yaml
-bash "$ROOT_DIR/scripts/apply-kustomize.sh" core/argocd "$ENVIRONMENT"
+kubectl apply -f $ROOT_DIR/src/cilium/base/resources/http.gateway.yaml
+bash "$ROOT_DIR/scripts/apply-kustomize.sh" argocd "$ENVIRONMENT"
 sleep 3
 bash "$ROOT_DIR/scripts/verify-pod.sh" argocd  app.kubernetes.io/name=argocd-redis 600
 # rollout argocd-server and argocd-repo-server to pick up any config changes

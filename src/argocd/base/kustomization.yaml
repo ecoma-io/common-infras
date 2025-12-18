@@ -5,8 +5,7 @@ namespace: argocd
 resources:
   - https://raw.githubusercontent.com/argoproj/argo-cd/v3.2.1/manifests/install.yaml
   - resources/argo-cd.http-route.yaml
-  - resources/cluster-core.appsets.yaml
-  - resources/platform.appsets.yaml
+  - resources/common.appsets.yaml
 patches:
   # REF https://argo-cd.readthedocs.io/en/stable/operator-manual/argocd-cm-yaml/
   # Enable exec plugin support in Argo CD.

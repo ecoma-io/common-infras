@@ -61,11 +61,11 @@ patches:
           name: local-repo
           mountPath: /mnt/local-repo.git
 
-  # ApplicationSet `cluster-core` patches split for clarity and to reduce merge conflicts.
+  # ApplicationSet `common` patches split for clarity and to reduce merge conflicts.
   # 1) Add git generator pointing at the local repo for dev clusters.
   - target:
       kind: ApplicationSet
-      name: cluster-core
+      name: common
     patch: |-
       - op: add
         path: /spec/generators/0/git
@@ -73,35 +73,12 @@ patches:
           repoURL: file:///mnt/local-repo.git
           revision: HEAD
           directories:
-            - path: src/core/*/dev
+            - path: src/*/dev
 
   # 2) Replace the template source repoURL to use the local repo.
   - target:
       kind: ApplicationSet
-      name: cluster-core
-    patch: |-
-      - op: replace
-        path: /spec/template/spec/source/repoURL
-        value: file:///mnt/local-repo.git
-
-  # ApplicationSet `platform` patches split for clarity and to reduce merge conflicts.
-  # 1) Add git generator pointing at the local repo for dev clusters.
-  - target:
-      kind: ApplicationSet
-      name: platform
-    patch: |-
-      - op: add
-        path: /spec/generators/0/git
-        value: 
-          repoURL: file:///mnt/local-repo.git
-          revision: HEAD
-          directories:
-            - path: src/platform/*/dev
-
-  # 2) Replace the template source repoURL to use the local repo.
-  - target:
-      kind: ApplicationSet
-      name: platform
+      name: common
     patch: |-
       - op: replace
         path: /spec/template/spec/source/repoURL

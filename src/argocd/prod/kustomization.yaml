@@ -53,7 +53,7 @@ patches:
 
   - target:
       kind: ApplicationSet
-      name: cluster-core
+      name: common
     patch: |-
       - op: replace
         path: /spec/generators/0/git
@@ -61,29 +61,11 @@ patches:
           repoURL: https://github.com/ecoma-io/common-infras.git
           revision: main
           directories:
-            - path: src/core/*/prod
+            - path: src/*/prod
       - op: replace
         path: /spec/template/spec/source/repoURL
         value: https://github.com/ecoma-io/common-infras.git
 
-  - target:
-      kind: ApplicationSet
-      name: platform
-    # Use Local Repo for Local Development
-    patch: |-
-      - op: replace
-        path: /spec/generators/0/git
-        value: 
-          repoURL: https://github.com/ecoma-io/common-infras.git
-          revision: main
-          directories:
-            - path: src/platform/*/prod
-      - op: replace
-        path: /spec/template/spec/source/repoURL
-        value: https://github.com/ecoma-io/common-infras.git
-      - op: replace
-        path: /spec/template/spec/source/targetRevision
-        value: main
   # Add Argo CD external URL and Dex connector for GitHub (prod)
   - target:
       kind: ConfigMap
@@ -114,7 +96,6 @@ patches:
               - name: ecoma-io
                 teams:
                 - admin
-                - platform
                 - devops
                 - core-product
   # Add RBAC policy and default role via patch (append to base argocd-rbac-cm)
