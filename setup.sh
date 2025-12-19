@@ -192,7 +192,7 @@ install_tailscale() {
     echo "Bringing up Tailscale with provided auth key..."    
     tailscale up --auth-key="$TAILSCALE_AUTH_KEY"
 	if [ $ROLE = "master" ]; then
-		tailscale serve --service=svc:kube-api --https=443 127.0.0.1:6443
+		tailscale serve --service=svc:kube-api --https=6443 127.0.0.1:6443
     fi
     systemctl enable --now tailscaled
     echo "Tailscale installation and setup completed."
