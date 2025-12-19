@@ -189,12 +189,11 @@ UNIT
 install_tailscale() {
 	echo "Installing Tailscale..."
 	curl -fsSL https://tailscale.com/install.sh | sh -
-    echo "Bringing up Tailscale with provided auth key..."
-    if [ $ROLE = "master" ]; then
-        echo "Enabling Tailscale to start on boot..."
-        tailscale serve --service=svc:kube-api --https=443 127.0.0.1:6443
-    fi
+    echo "Bringing up Tailscale with provided auth key..."    
     tailscale up --auth-key="$TAILSCALE_AUTH_KEY"
+	if [ $ROLE = "master" ]; then
+		tailscale serve --service=svc:kube-api --https=443 127.0.0.1:6443
+    fi
     systemctl enable --now tailscaled
     echo "Tailscale installation and setup completed."
 	
