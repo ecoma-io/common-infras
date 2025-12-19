@@ -31,7 +31,7 @@ spec:
                   key: tunnelToken
                   name: cf-tunnel-secret
             - name: TUNNEL_PROTOCOL
-              value: "auto"
+              value: "http2"
             - name: TUNNEL_GRACE_PERIOD
               value: "30s"
             - name: TUNNEL_RETRIES
