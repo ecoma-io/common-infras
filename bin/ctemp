@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ctemp - create a temporary directory under the repository root's `tmp/`
+# Prints the created directory path to stdout.
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+TMPROOT="$REPO_ROOT/tmp"
+
+mkdir -p "$TMPROOT"
+
+# use mktemp to create a unique dir under TMPROOT
+if command -v mktemp >/dev/null 2>&1; then
+  dir=$(mktemp -d "$TMPROOT/tmp.XXXXXX")
+else
+  dir="$TMPROOT/tmp.$$"
+  mkdir -p "$dir"
+fi
+
+printf '%s' "$dir"

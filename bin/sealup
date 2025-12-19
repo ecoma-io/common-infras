@@ -21,19 +21,19 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-# required: env (dev|prod) as positional argument
-env_arg=''
+# cert dir (defaults to repo root/.certs). Can be overridden with --cert-dir
+CERT_DIR="$REPO_ROOT/.certs"
 files=()
 
 usage() {
   cat <<EOF >&2
-Usage: $(basename "$0") ENV [--cert-dir DIR] [files...]
+Usage: $(basename "$0") [--cert-dir DIR] [files...]
 
 Arguments:
-  ENV              required, either 'dev' or 'prod' to select cert at repo root (ENV.cert)
+  files            optional YAML files to seal (reads stdin if none or '-' present)
 
 Options:
-  --cert-dir DIR   optional, override directory for certs (default: repo root)
+  --cert-dir DIR   optional, override directory for certs (default: repo_root/.certs)
   -                read from stdin
 EOF
   exit 2
@@ -42,9 +42,9 @@ EOF
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --cert-dir)
-      REPO_ROOT="$2"; shift 2 ;;
+      CERT_DIR="$2"; shift 2 ;;
     --cert-dir=*)
-      REPO_ROOT="${1#*=}"; shift ;;
+      CERT_DIR="${1#*=}"; shift ;;
     -)
       files+=( '-') ; shift ;;
     --)
@@ -52,24 +52,11 @@ while [[ $# -gt 0 ]]; do
     -* )
       echo "Unknown option: $1" >&2; usage ;;
     *)
-      if [[ -z "$env_arg" ]]; then
-        env_arg="$1"
-      else
-        files+=("$1")
-      fi
+      files+=("$1")
       shift ;;
   esac
 done
 
-if [[ -z "$env_arg" ]]; then
-  echo "ERROR: ENV positional argument is required (dev|prod)" >&2
-  usage
-fi
-
-if [[ "$env_arg" != "dev" && "$env_arg" != "prod" ]]; then
-  echo "ERROR: ENV must be 'dev' or 'prod'" >&2
-  usage
-fi
 
 if [[ ${#files[@]} -eq 0 ]]; then
   files+=( '-')
@@ -89,9 +76,17 @@ done
 
 first_output=true
 
-cert_file="$REPO_ROOT/${env_arg}.cert"
-if [[ ! -f "$cert_file" ]]; then
-  echo "ERROR: cert file not found at repo root: $cert_file" >&2
+# Ensure CERT_DIR exists when we try to read certs; specific cert files are
+# chosen per-document below (dev.cert for namespace 'dev', otherwise prod.cert).
+# Resolve relative cert dir paths against repository root. If the user passed
+# a relative path (doesn't start with '/'), interpret it relative to REPO_ROOT.
+if [[ "$CERT_DIR" != /* ]]; then
+  # strip any leading './' for cleanliness
+  CERT_DIR="$REPO_ROOT/${CERT_DIR#./}"
+fi
+
+if [[ ! -d "$CERT_DIR" ]]; then
+  echo "ERROR: cert directory not found: $CERT_DIR" >&2
   exit 6
 fi
 
@@ -137,6 +132,18 @@ for f in "${files[@]}"; do
     else
       # namespace scoped sealing (kubeseal expects 'namespace-wide')
       scope_args=("--scope" "namespace-wide")
+    fi
+
+    # choose cert file by namespace: use dev.cert for namespace 'dev', otherwise prod.cert
+    if [[ "${namespace}" == "dev" ]]; then
+      cert_file="$CERT_DIR/dev.cert"
+    else
+      cert_file="$CERT_DIR/prod.cert"
+    fi
+
+    if [[ ! -f "$cert_file" ]]; then
+      echo "ERROR: cert file not found: $cert_file" >&2
+      exit 6
     fi
 
     kubeseal_bin=$(command -v kubeseal || true)

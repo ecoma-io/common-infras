@@ -38,7 +38,83 @@ esac
 
 # If user explicitly provided 'build' as first arg, forward directly
 if [[ "${1:-}" == "build" ]]; then
-	exec "$KUSTOMIZE_BIN" "$@"
+	# Collect args and handle -o/--output and --apply/-apl
+	ARGS=()
+	OUTPUT_FILE=""
+	APPLY=""
+	while [[ $# -gt 0 ]]; do
+		case "$1" in
+			-o)
+				if [[ $# -lt 2 ]]; then
+					echo "ERROR: -o requires an argument" >&2
+					exit 2
+				fi
+				OUTPUT_FILE="$2"
+				shift 2 ;;
+			-o*)
+				OUTPUT_FILE="${1#-o}"
+				shift ;;
+			--output)
+				if [[ $# -lt 2 ]]; then
+					echo "ERROR: --output requires an argument" >&2
+					exit 2
+				fi
+				OUTPUT_FILE="$2"
+				shift 2 ;;
+			--output=*)
+				OUTPUT_FILE="${1#--output=}"
+				shift ;;
+			--apply|-apl)
+				APPLY=1; shift ;;
+			*)
+				ARGS+=("$1")
+				shift ;;
+		esac
+	done
+
+	if [[ -n "$OUTPUT_FILE" ]]; then
+		# run kustomize and write stdout to the output file
+		set +e
+		"$KUSTOMIZE_BIN" "${ARGS[@]}" | tee "$OUTPUT_FILE"
+		kstatus=${PIPESTATUS[0]}
+		set -e
+		if [[ -n "$APPLY" ]]; then
+			kubectl_bin=$(command -v kubectl || true)
+			if [[ -z "$kubectl_bin" ]]; then
+				echo "ERROR: kubectl not found in PATH" >&2
+				exit 3
+			fi
+			"$kubectl_bin" apply -f "$OUTPUT_FILE"
+			astatus=$?
+			# prefer kustomize status if non-zero, otherwise kubectl status
+			if [[ $kstatus -ne 0 ]]; then
+				exit $kstatus
+			else
+				exit $astatus
+			fi
+		fi
+		exit $kstatus
+	else
+		if [[ -n "$APPLY" ]]; then
+			kubectl_bin=$(command -v kubectl || true)
+			if [[ -z "$kubectl_bin" ]]; then
+				echo "ERROR: kubectl not found in PATH" >&2
+				exit 3
+			fi
+			set +e
+			"$KUSTOMIZE_BIN" "${ARGS[@]}" | "$kubectl_bin" apply -f -
+			kstatus=${PIPESTATUS[0]}
+			astatus=${PIPESTATUS[1]}
+			set -e
+			if [[ $kstatus -ne 0 ]]; then
+				exit $kstatus
+			else
+				exit $astatus
+			fi
+		else
+			exec "$KUSTOMIZE_BIN" "${ARGS[@]}"
+		fi
+	fi
 fi
 
 # Default flags for kustomize build
@@ -48,4 +124,86 @@ if [[ "${KUSTB_DEBUG:-0}" != "0" ]]; then
 	echo "Running: $KUSTOMIZE_BIN ${DEFAULT_FLAGS[*]} $*" >&2
 fi
 
-exec "$KUSTOMIZE_BIN" "${DEFAULT_FLAGS[@]}" "$@"
+# Parse args for -o/--output for the default invocation
+USER_ARGS=("$@")
+OUTPUT_FILE=""
+APPLY=""
+FILTERED_ARGS=()
+i=0
+while [ $i -lt ${#USER_ARGS[@]} ]; do
+	a="${USER_ARGS[$i]}"
+	case "$a" in
+		-o)
+			next=$((i+1))
+			if [ $next -ge ${#USER_ARGS[@]} ]; then
+				echo "ERROR: -o requires an argument" >&2
+				exit 2
+			fi
+			OUTPUT_FILE="${USER_ARGS[$next]}"
+			i=$((i+2)) ;;
+		-o*)
+			OUTPUT_FILE="${a#-o}"
+			i=$((i+1)) ;;
+		--output)
+			next=$((i+1))
+			if [ $next -ge ${#USER_ARGS[@]} ]; then
+				echo "ERROR: --output requires an argument" >&2
+				exit 2
+			fi
+			OUTPUT_FILE="${USER_ARGS[$next]}"
+			i=$((i+2)) ;;
+		--output=*)
+			OUTPUT_FILE="${a#--output=}"
+			i=$((i+1)) ;;
+		--apply|-apl)
+			APPLY=1
+			i=$((i+1)) ;;
+		*)
+			FILTERED_ARGS+=("$a")
+			i=$((i+1)) ;;
+	esac
+done
+
+KUSTOMIZE_ARGS=("${DEFAULT_FLAGS[@]}" "${FILTERED_ARGS[@]}")
+
+if [[ -n "$OUTPUT_FILE" ]]; then
+	set +e
+	"$KUSTOMIZE_BIN" "${KUSTOMIZE_ARGS[@]}" | tee "$OUTPUT_FILE"
+	kstatus=${PIPESTATUS[0]}
+	set -e
+	if [[ -n "$APPLY" ]]; then
+		kubectl_bin=$(command -v kubectl || true)
+		if [[ -z "$kubectl_bin" ]]; then
+			echo "ERROR: kubectl not found in PATH" >&2
+			exit 3
+		fi
+		"$kubectl_bin" apply -f "$OUTPUT_FILE"
+		astatus=$?
+		if [[ $kstatus -ne 0 ]]; then
+			exit $kstatus
+		else
+			exit $astatus
+		fi
+	fi
+	exit $kstatus
+else
+	if [[ -n "$APPLY" ]]; then
+		kubectl_bin=$(command -v kubectl || true)
+		if [[ -z "$kubectl_bin" ]]; then
+			echo "ERROR: kubectl not found in PATH" >&2
+			exit 3
+		fi
+		set +e
+		"$KUSTOMIZE_BIN" "${KUSTOMIZE_ARGS[@]}" | "$kubectl_bin" apply -f -
+		kstatus=${PIPESTATUS[0]}
+		astatus=${PIPESTATUS[1]}
+		set -e
+		if [[ $kstatus -ne 0 ]]; then
+			exit $kstatus
+		else
+			exit $astatus
+		fi
+	else
+		exec "$KUSTOMIZE_BIN" "${KUSTOMIZE_ARGS[@]}"
+	fi
+fi
