@@ -100,6 +100,9 @@ k3d cluster create "$CLUSTER_NAME" \
   --k3s-arg "--disable=kube-proxy@server:*" \
   --k3s-arg "--cluster-cidr=10.42.0.0/16@server:0" \
   --k3s-arg "--service-cidr=10.43.0.0/16@server:0" \
+  --k3s-node-label "storage-tier/hot=true@agent:0" \
+  --k3s-node-label "storage-tier/warm=true@agent:0" \
+  --k3s-node-label "storage-tier/cold=true@agent:0" \
   --wait
 
 
