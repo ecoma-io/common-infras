@@ -18,13 +18,4 @@ localpv:
       memory: 128Mi
 
 hostpathClass:
-  name: hostpath
-  isDefaultClass: true
-  xfsQuota:
-    enabled: true
-    softLimitGrace: "0%"
-    hardLimitGrace: "0%"
-  ext4Quota:
-    enabled: true
-    softLimitGrace: "0%"
-    hardLimitGrace: "0%"
+  enabled: false

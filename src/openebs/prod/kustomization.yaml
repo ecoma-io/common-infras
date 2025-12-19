@@ -3,3 +3,6 @@ kind: Kustomization
 namespace: openebs
 resources:
   - ../base
+  - resources/hot.storageclass.yaml
+  - resources/warm.storageclass.yaml
+  - resources/cold.storageclass.yaml

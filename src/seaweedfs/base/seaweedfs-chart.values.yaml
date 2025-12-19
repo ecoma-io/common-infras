@@ -1,0 +1,52 @@
+# REF: https://github.com/seaweedfs/seaweedfs/blob/master/k8s/charts/seaweedfs/values.yaml
+global:
+  enableReplication: false
+  replicationPlacement: "000"
+  extraEnvironmentVars:
+    WEED_CLUSTER_DEFAULT: "sw"
+    WEED_CLUSTER_SW_MASTER: "seaweedfs-master.seaweedfs:9333"
+    WEED_CLUSTER_SW_FILER: "seaweedfs-filer-client.seaweedfs:8888"
+
+master:
+  enabled: true
+  disableHttp: true
+  volumeSizeLimitMB: 16000
+  volumePreallocate: true
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  data:
+    type: "persistentVolumeClaim"
+    size: "1Gi"
+    storageClass: "localpv-hot"
+  nodeSelector: |
+    storage-tier/hot: "true"
+
+volume:
+  enabled: false
+
+volumes:
+  ecoma1:
+    nodeSelector: |
+      kubernetes.io/hostname: "ecoma1"
+    dataDirs:
+      - name: "data1"
+        type: "persistentVolumeClaim"
+        size: "6000Gi"
+        storageClass: "localpv-cold"
+        maxVolumes: 0
+    dataCenter: "vn-hn-1"
+    rack: "rack1"
+
+filer:
+  enabled: false
+s3:
+  enabled: false
+admin:
+  enabled: false
+worker:
+  enabled: false

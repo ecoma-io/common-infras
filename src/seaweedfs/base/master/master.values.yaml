@@ -1,0 +1,33 @@
+# REF: https://github.com/seaweedfs/seaweedfs/blob/master/k8s/charts/seaweedfs/values.yaml
+master:
+  enabled: true
+  disableHttp: true
+  enableReplication: false
+  replicationPlacement: "000"
+  volumeSizeLimitMB: 16000
+  volumePreallocate: true
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  data:
+    type: "persistentVolumeClaim"
+    size: "1Gi"
+    storageClass: "localpv-hot"
+  nodeSelector: |
+    storage-tier/hot: "true"
+
+volume:
+  enabled: false
+
+filer:
+  enabled: false
+s3:
+  enabled: false
+admin:
+  enabled: false
+worker:
+  enabled: false

@@ -1,0 +1,40 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: seaweedfs
+
+resources:
+  - master
+# helmCharts:
+#   - name: seaweedfs
+#     repo: https://seaweedfs.github.io/seaweedfs/helm
+#     releaseName: seaweedfs
+#     version: 4.0.403
+#     valuesFile: seaweedfs-chart.values.yaml
+# patches:
+#   # Override volume command to use runtime ${NAMESPACE} for DNS
+#   - target:
+#       kind: StatefulSet
+#       name: seaweedfs-volume-ecoma1
+#     patch: |-
+#       - op: replace
+#         path: /spec/template/spec/containers/0/command
+#         value:
+#           - "/bin/sh"
+#           - "-ec"
+#           - |-
+#             exec /usr/bin/weed \
+#               -logtostderr=true \
+#               -v=1 \
+#               volume \
+#               -port=8080 \
+#               -metricsPort=9327 \
+#               -dir /data1 \
+#               -max 0 \
+#               -rack=rack1 \
+#               -dataCenter=vn-hn-1 \
+#               -ip.bind=0.0.0.0 \
+#               -readMode=proxy \
+#               -minFreeSpacePercent=1 \
+#               -ip=${POD_NAME}.${SEAWEEDFS_FULLNAME}-volume-ecoma1.${NAMESPACE} \
+#               -compactionMBps=50 \
+#               -master=${WEED_CLUSTER_SW_MASTER}
