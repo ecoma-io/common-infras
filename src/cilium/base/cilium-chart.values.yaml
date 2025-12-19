@@ -60,6 +60,13 @@ hubble:
         memory: 512Mi
 envoy:
   enabled: true
+  securityContext:
+    capabilities:
+      keepCapNetBindService: true
+      envoy:
+        - SYS_ADMIN
+        - NET_ADMIN
+        - NET_BIND_SERVICE
   rollingUpdate:
     maxSurge: 25%
     maxUnavailable: 0

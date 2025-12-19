@@ -14,6 +14,8 @@ spec:
       labels:
         pod: cloudflared
     spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       serviceAccountName: cf-tunnel
       containers:
         - command:
@@ -31,7 +33,7 @@ spec:
                   key: tunnelToken
                   name: cf-tunnel-secret
             - name: TUNNEL_PROTOCOL
-              value: "http2"
+              value: "auto"
             - name: TUNNEL_GRACE_PERIOD
               value: "30s"
             - name: TUNNEL_RETRIES
