@@ -1,6 +1,6 @@
 {
   "name": "Ecoma Common Infras",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:24-bookworm",
+  "image": "ghcr.io/ecoma-io/devops-devcontainer:1",
   "runArgs": [
     "--name",
     "ecoma-common-infras",
@@ -12,32 +12,6 @@
   ],
   "remoteEnv": {
     "PATH": "${containerEnv:PATH}:/${localWorkspaceFolder}/bin"
-  },
-  "features": {
-    "ghcr.io/devcontainers/features/common-utils:2": {
-      "installZsh": "true",
-      "installOhMyZsh": "true",
-      "configureZshAsDefaultShell": true,
-      "installOhMyZshConfig": true
-    },
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {
-      "version": "latest",
-      "moby": true
-    },
-    "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/dhoeric/features/hadolint:1": {},
-    "./features/omz": {
-      "preInstalledPlugins": ["git", "git-auto-fetch"],
-      "customPlugins": [
-        "zsh-syntax-highlighting:https://github.com/zsh-users/zsh-syntax-highlighting.git",
-        "you-should-use:https://github.com/MichaelAquilina/zsh-you-should-use.git",
-        "zsh-autosuggestions:https://github.com/zsh-users/zsh-autosuggestions/archive/refs/tags/v0.7.1.zip"
-      ],
-      "deleteInactive": true
-    },
-    "./features/powerlevel10k": {
-      "deletePreinstalledThemes": true
-    }
   },
   "appPort": [80, 443],
   "postCreateCommand": "sh .devcontainer/post-create.sh",
